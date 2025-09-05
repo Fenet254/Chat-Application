@@ -1,62 +1,83 @@
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+
 import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.net.Socket;
 
-public class ChatServer {
-    private static final int PORT = 1234;
-    private static Set<PrintWriter> clientWriters = new HashSet<>();
+public class ChatClientGUI extends Application {
+    private static final String SERVER_ADDRESS = "localhost";
+    private static final int SERVER_PORT = 1234;
 
-    public static void main(String[] args) {
-        System.out.println("Chat server started on port " + PORT);
+    private PrintWriter out;
+    private BufferedReader in;
 
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            while (true) {
-                new ClientHandler(serverSocket.accept()).start();
-            }
+    private TextArea chatArea;
+    private TextField inputField;
+    private String username = "User";
+
+    @Override
+    public void start(Stage primaryStage) {
+        // UI elements
+        chatArea = new TextArea();
+        chatArea.setEditable(false);
+
+        inputField = new TextField();
+        inputField.setPromptText("Type your message...");
+        inputField.setOnAction(e -> sendMessage());
+
+        Button sendBtn = new Button("Send");
+        sendBtn.setOnAction(e -> sendMessage());
+
+        HBox inputBox = new HBox(10, inputField, sendBtn);
+        VBox root = new VBox(10, chatArea, inputBox);
+
+        Scene scene = new Scene(root, 400, 300);
+
+        primaryStage.setTitle("Java Chat App");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+
+        // Connect to server
+        connectToServer();
+    }
+
+    private void connectToServer() {
+        try {
+            Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+            out = new PrintWriter(socket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            // Thread to listen for messages
+            new Thread(() -> {
+                try {
+                    String response;
+                    while ((response = in.readLine()) != null) {
+                        String msg = response;
+                        Platform.runLater(() -> chatArea.appendText(msg + "\n"));
+                    }
+                } catch (IOException e) {
+                    Platform.runLater(() -> chatArea.appendText("Disconnected from server.\n"));
+                }
+            }).start();
+
         } catch (IOException e) {
-            e.printStackTrace();
+            chatArea.appendText("Could not connect to server.\n");
         }
     }
 
-    private static class ClientHandler extends Thread {
-        private Socket socket;
-        private PrintWriter out;
-        private BufferedReader in;
-
-        public ClientHandler(Socket socket) {
-            this.socket = socket;
+    private void sendMessage() {
+        String message = inputField.getText();
+        if (!message.isEmpty() && out != null) {
+            out.println(username + ": " + message);
+            inputField.clear();
         }
+    }
 
-        public void run() {
-            try {
-                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                out = new PrintWriter(socket.getOutputStream(), true);
-
-                synchronized (clientWriters) {
-                    clientWriters.add(out);
-                }
-
-                String message;
-                while ((message = in.readLine()) != null) {
-                    System.out.println("Received: " + message);
-                    broadcast(message);
-                }
-            } catch (IOException e) {
-                System.out.println("Client disconnected.");
-            } finally {
-                try { socket.close(); } catch (IOException e) {}
-                synchronized (clientWriters) {
-                    clientWriters.remove(out);
-                }
-            }
-        }
-
-        private void broadcast(String message) {
-            synchronized (clientWriters) {
-                for (PrintWriter writer : clientWriters) {
-                    writer.println(message);
-                }
-            }
-        }
+    public static void main(String[] args) {
+        launch(args);
     }
 }
