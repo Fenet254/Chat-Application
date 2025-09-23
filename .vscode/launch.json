@@ -1,18 +1,7 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "java",
-      "name": "Run ChatServer",
-      "request": "launch",
-      "mainClass": "ChatServer"
-    },
-    {
-      "type": "java",
-      "name": "Run ChatClientFX",
-      "request": "launch",
-      "mainClass": "ChatClientFX",
-      "vmArgs": "--module-path ${workspaceFolder}/lib --add-modules javafx.controls"
-    }
-  ]
+  "type": "java",
+  "name": "Run ChatClientFX",
+  "request": "launch",
+  "mainClass": "ChatClientFX",
+  "vmArgs": "--module-path C:/javafx-sdk-22/javafx-sdk-21.0.2/lib --add-modules javafx.controls"
 }
