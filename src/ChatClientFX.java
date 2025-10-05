@@ -28,12 +28,12 @@ public class ChatClientFX extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("JavaFX Chat Client");
 
-        // Chat area
+       
         messageArea = new TextArea();
         messageArea.setEditable(false);
         messageArea.setWrapText(true);
 
-        // Input field & send button
+     
         inputField = new TextField();
         inputField.setPromptText("Type a message...");
         sendBtn = new Button("Send");
@@ -42,7 +42,7 @@ public class ChatClientFX extends Application {
         HBox inputBox = new HBox(8, inputField, sendBtn);
         inputBox.setPadding(new Insets(8));
 
-        // Server connection controls
+       
         serverField = new TextField("127.0.0.1");
         serverField.setPrefWidth(120);
         portField = new TextField("12345");
@@ -68,7 +68,7 @@ public class ChatClientFX extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
 
-        // Event handlers
+
         connectBtn.setOnAction(e -> connect());
         sendBtn.setOnAction(e -> sendMessage());
         inputField.setOnKeyPressed(e -> {
