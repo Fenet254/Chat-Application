@@ -23,30 +23,39 @@ public class ChatClientFX extends Application {
     private TextField portField;
     private TextField nameField;
     private Button connectBtn;
+    private ListView<String> userList;
+    private Button emojiBtn;
+    private Button fileBtn;
+    private Button themeBtn;
+    private TabPane tabPane;
+    private Map<String, TextArea> privateChats;
 
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
+    private boolean isDarkTheme = false;
 
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("JavaFX Chat Client");
 
-       
+        // Initialize components
         messageArea = new TextArea();
         messageArea.setEditable(false);
         messageArea.setWrapText(true);
 
-     
         inputField = new TextField();
         inputField.setPromptText("Type a message...");
         sendBtn = new Button("Send");
         sendBtn.setDisable(true);
 
-        HBox inputBox = new HBox(8, inputField, sendBtn);
+        emojiBtn = new Button("😊");
+        fileBtn = new Button("📎");
+        themeBtn = new Button("🌙");
+
+        HBox inputBox = new HBox(8, inputField, sendBtn, emojiBtn, fileBtn, themeBtn);
         inputBox.setPadding(new Insets(8));
 
-       
         serverField = new TextField("127.0.0.1");
         serverField.setPrefWidth(120);
         portField = new TextField("12345");
@@ -62,19 +71,41 @@ public class ChatClientFX extends Application {
                 connectBtn);
         topBox.setPadding(new Insets(8));
 
+        // User list
+        userList = new ListView<>();
+        userList.setPrefWidth(150);
+        userList.setOnMouseClicked(e -> {
+            String selectedUser = userList.getSelectionModel().getSelectedItem();
+            if (selectedUser != null && !selectedUser.equals(nameField.getText())) {
+                openPrivateChat(selectedUser);
+            }
+        });
+
+        // Tab pane for chats
+        tabPane = new TabPane();
+        Tab publicTab = new Tab("Public", messageArea);
+        publicTab.setClosable(false);
+        tabPane.getTabs().add(publicTab);
+
+        privateChats = new HashMap<>();
+
         // Layout
         BorderPane root = new BorderPane();
         root.setTop(topBox);
-        root.setCenter(messageArea);
+        root.setCenter(tabPane);
+        root.setRight(userList);
         root.setBottom(inputBox);
 
-        Scene scene = new Scene(root, 700, 500);
+        Scene scene = new Scene(root, 900, 600);
         primaryStage.setScene(scene);
         primaryStage.show();
 
-
+        // Event handlers
         connectBtn.setOnAction(e -> connect());
         sendBtn.setOnAction(e -> sendMessage());
+        emojiBtn.setOnAction(e -> insertEmoji());
+        fileBtn.setOnAction(e -> sendFile());
+        themeBtn.setOnAction(e -> toggleTheme(scene));
         inputField.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ENTER) sendMessage();
         });
@@ -109,7 +140,7 @@ public class ChatClientFX extends Application {
                     String line;
                     while ((line = in.readLine()) != null) {
                         final String msg = line;
-                        Platform.runLater(() -> messageArea.appendText(msg + "\n"));
+                        Platform.runLater(() -> handleIncomingMessage(msg));
                     }
                 } catch (IOException e) {
                     Platform.runLater(() -> messageArea.appendText("[Server disconnected]\n"));
@@ -166,7 +197,50 @@ public class ChatClientFX extends Application {
         alert.showAndWait();
     }
 
-    public static void main(String[] args) {
-        launch(args);
+    private void handleIncomingMessage(String msg) {
+        if (msg.startsWith("USERLIST ")) {
+            String[] parts = msg.split(" ", 2);
+            if (parts.length > 1) {
+                String[] users = parts[1].split(",");
+                userList.getItems().clear();
+                for (String user : users) {
+                    userList.getItems().add(user);
+                }
+            }
+        } else {
+            // Decrypt if encrypted
+            if (msg.contains(":")) {
+                String[] parts = msg.split(": ", 2);
+                if (parts.length > 1) {
+                    String decrypted = EncryptionUtil.decrypt(parts[1]);
+                    msg = parts[0] + ": " + decrypted;
+                }
+            }
+            messageArea.appendText(msg + "\n");
+        }
     }
-}
+
+    private void openPrivateChat(String user) {
+        if (privateChats.containsKey(user)) {
+            // Switch to existing tab
+            for (Tab tab : tabPane.getTabs()) {
+                if (tab.getText().equals(user)) {
+                    tabPane.getSelectionModel().select(tab);
+                    break;
+                }
+            }
+        } else {
+            TextArea privateArea = new TextArea();
+            privateArea.setEditable(false);
+            privateArea.setWrapText(true);
+            Tab privateTab = new Tab(user, privateArea);
+            privateTab.setOnClosed(e -> privateChats.remove(user));
+            tabPane.getTabs().add(privateTab);
+            privateChats.put(user, privateArea);
+            tabPane.getSelectionModel().select(privateTab);
+        }
+    }
+
+    private void insertEmoji() {
+        inputField.appendText("😊");
+    }
