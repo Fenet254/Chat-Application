@@ -12,12 +12,12 @@
 - [x] Handle file sharing: Support sending/receiving files between clients.
 
 ## Edit ChatClientFX.java
-- [ ] Add UI elements: User list pane, emoji picker, file send button.
-- [ ] Support private message tabs/windows: Allow opening private chats.
-- [ ] Display timestamps: Show timestamps in message area.
-- [ ] Add typing indicators: Notify when a user is typing.
-- [ ] Add theme toggle: Light/dark mode switch.
-- [ ] Handle file receiving and saving: Allow downloading received files.
+- [x] Add UI elements: User list pane, emoji picker, file send button.
+- [x] Support private message tabs/windows: Allow opening private chats.
+- [x] Display timestamps: Show timestamps in message area.
+- [x] Add typing indicators: Notify when a user is typing.
+- [x] Add theme toggle: Light/dark mode switch.
+- [x] Handle file receiving and saving: Allow downloading received files.
 
 ## Followup Steps
 - [ ] Test compilation and running of server and client.

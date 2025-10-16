@@ -244,3 +244,27 @@ public class ChatClientFX extends Application {
     private void insertEmoji() {
         inputField.appendText("😊");
     }
+
+    private void sendFile() {
+        FileChooser fileChooser = new FileChooser();
+        File file = fileChooser.showOpenDialog(null);
+        if (file != null) {
+            out.println("/file " + file.getName());
+        }
+    }
+
+    private void toggleTheme(Scene scene) {
+        if (isDarkTheme) {
+            scene.getRoot().setStyle("-fx-base: white;");
+            themeBtn.setText("🌙");
+        } else {
+            scene.getRoot().setStyle("-fx-base: #2b2b2b; -fx-control-inner-background: #3c3c3c; -fx-text-fill: white;");
+            themeBtn.setText("☀️");
+        }
+        isDarkTheme = !isDarkTheme;
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+}
